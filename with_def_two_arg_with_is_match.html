@@ -1,0 +1,72 @@
+<div id="log"></div>
+
+<script>
+function log(text) {
+    document.getElementById("log").textContent += text + "\n";
+    window.scrollTo(document.body.height, true);
+}
+
+class FooElement extends HTMLElement {
+  constructor() {
+    super();
+  }
+};
+customElements.define("x-foo", FooElement);
+
+
+function runTest() {
+    for (var x = 0; x < 10000; x++) {
+        document.createElement("x-foo");
+    }
+}
+
+var runCount = 10;
+var completedRuns = -1; // Discard the any runs < 0.
+var times = [];
+
+function computeAverage(values) {
+    var sum = 0;
+    for (var i = 0; i < values.length; i++)
+        sum += values[i];
+    return sum / values.length;
+}
+
+function computeStdev(values) {
+    var average = computeAverage(values);
+    var sumOfSquaredDeviations = 0;
+    for (var i = 0; i < values.length; ++i) {
+        var deviation = values[i] - average;
+        sumOfSquaredDeviations += deviation * deviation;
+    }
+    return Math.sqrt(sumOfSquaredDeviations / values.length);
+}
+
+function logStatistics(times) {
+    log("");
+    log("avg " + computeAverage(times));
+    log("stdev " + computeStdev(times));
+}
+
+function run() {
+    var start = new Date();
+    for (var i = 0; i < 10; ++i)
+        runTest();
+    var time = new Date() - start;
+    completedRuns++;
+    if (completedRuns <= 0) {
+        log("Ignoring warm-up run (" + time + ")");
+    } else {
+        times.push(time);
+        log(time);
+    }
+    if (completedRuns < runCount) {
+        window.setTimeout(run, 0);
+    } else {
+        logStatistics(times);
+    }
+}
+
+log("Running " + runCount + " times");
+run();
+</script>
+</body>
